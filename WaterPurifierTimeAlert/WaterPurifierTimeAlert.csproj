@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Revision></Revision>
+		<Version>1.0.0</Version>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="CommandLineParser" Version="2.9.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.3" />
+		<PackageReference Include="Serilog.Enrichers.Caller" Version="1.0.0" />
+		<PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+		<PackageReference Include="Serilog.Sinks.File.Extensions" Version="1.0.0" />
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+		<PackageReference Include="System.Configuration.Extensions" Version="1.0.1" />
+		<PackageReference Include="System.Threading.Extensions" Version="1.0.0" />
+		<PackageReference Include="Telegram.Bot" Version="22.4.4" />
+		<PackageReference Include="YamlDotNet" Version="16.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="config.yml">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Migrations\" />
+	</ItemGroup>
+
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="git describe --long --always --exclude=* --abbrev=8" ConsoleToMSBuild="true">
+			<Output PropertyName="Revision" TaskParameter="ConsoleOutput" />
+		</Exec>
+	</Target>
+
+	<Target Name="SetRevision" AfterTargets="PreBuild">
+		<ItemGroup>
+			<AssemblyAttribute Include="WaterPurifierTimeAlert.Revision">
+				<_Parameter1>$(Revision)</_Parameter1>
+			</AssemblyAttribute>
+		</ItemGroup>
+	</Target>
+
+</Project>
