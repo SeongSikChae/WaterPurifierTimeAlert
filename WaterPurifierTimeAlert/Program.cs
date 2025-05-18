@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -57,7 +57,7 @@ namespace WaterPurifierTimeAlert
 
 			builder.Logging.Services.AddSerilog(configure =>
 			{
-				configure.Enrich.WithCaller().WriteTo.File(new DirectoryInfo(cmdMain.LogDirPath).FullName, "waterPurifierTimeAlert.log", Serilog.Events.LogEventLevel.Information, CallerEnricherOutputTemplate.Default, rollingInterval: RollingInterval.Month, retainedFileCountLimit: 12);
+				configure.Enrich.WithCaller().WriteTo.File(new DirectoryInfo(cmdMain.LogDirPath).FullName, "waterPurifierTimeAlert.log", Serilog.Events.LogEventLevel.Information, CallerEnricherOutputTemplate.Default, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 12);
 			});
 
 			builder.Services.AddSystemd();
