@@ -4,8 +4,8 @@ namespace WaterPurifierTimeAlert.Context
 {
 	using Entity;
 
-    public class PurifierContext(DbContextOptions<PurifierContext> options) : DbContext(options)
-    {
+	public class PurifierContext(DbContextOptions<PurifierContext> options) : DbContext(options)
+	{
 		public virtual DbSet<FilterType> FilterType { get; set; }
 
 		public virtual DbSet<ExchangeFilter> ExchangeFilter { get; set; }
@@ -23,7 +23,8 @@ namespace WaterPurifierTimeAlert.Context
 
 			modelBuilder.Entity<ExchangeFilter>().HasKey(entity => entity.FilterName);
 			modelBuilder.Entity<ExchangeFilter>().Property(property => property.FilterName).HasMaxLength(20).IsRequired();
-			modelBuilder.Entity<ExchangeFilter>().Property(property => property.LastExchnageDate).IsRequired();
+			modelBuilder.Entity<ExchangeFilter>().Property(property => property.LastExchnageDate).IsRequired().HasConversion(v => v.ToString("yyyy-MM-dd"), v => DateTime.Parse(v));
+
 			base.OnModelCreating(modelBuilder);
 		}
 	}

@@ -1,24 +1,45 @@
-﻿using WaterPurifierTimeAlert.Context.Entity;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace WaterPurifierTimeAlert.Context.Store
 {
+	using Entity;
+
 	public interface IFilterTypeStore
 	{
 		IEnumerable<FilterType> GetList();
 
 		Task CreateAsync(FilterType filterType);
 
-		public sealed class FilterTypeStore(PurifierContext context) : IFilterTypeStore
+		public sealed class FilterTypeStore(IDbContextFactory<PurifierContext> dbContextFactory, ILogger<FilterTypeStore> logger) : IFilterTypeStore
 		{
 			public IEnumerable<FilterType> GetList()
 			{
-				return [.. context.FilterType];
+				try
+				{
+					using PurifierContext context = dbContextFactory.CreateDbContext();
+					return [.. context.FilterType];
+				}
+				catch (Exception e)
+				{
+					logger.Error(e.Message, e);
+					throw;
+				}
 			}
 
 			public async Task CreateAsync(FilterType filterType)
 			{
-				context.FilterType.Add(filterType);
-				await context.SaveChangesAsync();
+				try
+				{
+					using PurifierContext context = dbContextFactory.CreateDbContext();
+					context.FilterType.Add(filterType);
+					await context.SaveChangesAsync();
+				}
+				catch (Exception e)
+				{
+					logger.Error(e.Message, e);
+					throw;
+				}
 			}
 		}
 	}

@@ -39,7 +39,6 @@ namespace WaterPurifierTimeAlert
 			client.OnMessage += Client_OnMessage;
 			recevierQueue = new ConcurrentQueue<long>();
 			messageSender = new TelegramMessageSender(recevierQueue, client);
-			// CommandLine.Parser.Default.Settings.HelpWriter = messageSender;
 			parser = new CommandLine.Parser(configure =>
 			{
 				configure.HelpWriter = messageSender;
@@ -61,14 +60,14 @@ namespace WaterPurifierTimeAlert
 			public string ExpireTime { get; set; } = null!;
 		}
 
-		[Verb("exchageFilter", HelpText = "Exchage Filter")]
+		[Verb("exchangeFilter", HelpText = "Exchage Filter")]
 		internal sealed class ExchangeFilterCommand
 		{
 			[Option("filterName", Required = true)]
 			public string FilterName { get; set; } = null!;
 
-			[Option("lastExchnageDate")]
-			public string? LastExchnageDate { get; set; }
+			[Option("lastExchangeDate")]
+			public string? LastExchangeDate { get; set; }
 		}
 
 		private Task Client_OnMessage(Message message, Telegram.Bot.Types.Enums.UpdateType type)
@@ -98,7 +97,7 @@ namespace WaterPurifierTimeAlert
 				return exchangeFilterStore.AddOrUpdateAsync(new ExchangeFilter
 				{
 					FilterName = cmd.FilterName,
-					LastExchnageDate = cmd.LastExchnageDate is null ? DateTime.Now : DateTime.ParseExact(cmd.LastExchnageDate, "yyyy-MM-dd", System.Globalization.CultureInfo.CurrentCulture)
+					LastExchnageDate = cmd.LastExchangeDate is null ? DateTime.Now : DateTime.ParseExact(cmd.LastExchangeDate, "yyyy-MM-dd", System.Globalization.CultureInfo.CurrentCulture)
 				});
 			},
 			(errors) =>
