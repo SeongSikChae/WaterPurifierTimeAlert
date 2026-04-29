@@ -1,5 +1,0 @@
----
-DbPath: ./data/Purifier.sqlite
-CronExpression: "0 30 11 * * ?"
-#TelegramBotToken: 
-#Receivers:    
