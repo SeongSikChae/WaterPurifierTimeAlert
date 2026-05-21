@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sb-primary: #4e73df;
+  --color-sb-primary-dark: #224abe;
+  --color-sb-success: #1cc88a;
+  --color-sb-info: #36b9cc;
+  --color-sb-warning: #f6c23e;
+  --color-sb-danger: #e74a3b;
+  --color-sb-dark: #5a5c69;
+  --font-sb: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: var(--font-sb);
+}
+
+.sb-sidebar {
+  background-image: linear-gradient(180deg, var(--color-sb-primary) 10%, var(--color-sb-primary-dark) 100%);
+}
+
+.sb-card-shadow {
+  box-shadow: 0 0.15rem 1.75rem 0 rgb(58 59 69 / 15%);
+}

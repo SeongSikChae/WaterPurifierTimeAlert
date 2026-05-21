@@ -11,11 +11,13 @@ using System.RelativeTime;
 using System.RelativeTime.Parser;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Net.WebSockets;
 
 namespace WaterPurifierTimeAlert.Server
 {
     using Server.Context;
     using Server.Context.Store;
+    using Server.Services;
 
     public class Program
     {
@@ -27,7 +29,7 @@ namespace WaterPurifierTimeAlert.Server
             [Option("log", Required = true, HelpText = "log dir path")]
             public string LogDirPath { get; set; } = null!;
 
-            [Option("spaDevServerUrl", Default = "http://localhost:5172", HelpText = "ProxyToSpaDevelopmentServerUrl")]
+            [Option("spaDevServerUrl", Default = "http://localhost:5173", HelpText = "ProxyToSpaDevelopmentServerUrl")]
             public string SpaDevServerUrl { get; set; } = null!;
         }
 
@@ -80,6 +82,7 @@ namespace WaterPurifierTimeAlert.Server
                 {
                     options.ListenAnyIP(configuration.WebHttpsPort.Value, configure =>
                     {
+                        configure.Protocols = HttpProtocols.Http1;
                         configure.UseHttps(httpsOptions =>
                         {
                             httpsOptions.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
@@ -158,7 +161,9 @@ namespace WaterPurifierTimeAlert.Server
             builder.Services.AddSingleton(RelativeTimeExpressionToDateTimeParserFactory.Create());
             builder.Services.AddSingleton(configuration);
             builder.Services.AddSingleton<ITaskScheduler, DefaultTaskScheduler>();
-            builder.Services.AddSignalR();
+            builder.Services.AddSingleton<WebSocketProcessor>();
+            builder.Services.AddSingleton<NotificationHubs>();
+            builder.Services.AddSingleton<AlertTask>();
             builder.Services.AddControllers();
             //// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
@@ -224,18 +229,35 @@ namespace WaterPurifierTimeAlert.Server
             });
             app.UseHsts();
 
+            app.UseWebSockets();
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+            app.Map("/ws", async context =>
+            {
+                if (!context.WebSockets.IsWebSocketRequest)
+                {
+                    context.Response.StatusCode = 400;
+                    return;
+                }
+
+                WebSocketProcessor processor = context.RequestServices.GetRequiredService<WebSocketProcessor>();
+
+                using WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+
+                X509Certificate2? clientCertificate = await context.Connection.GetClientCertificateAsync();
+                await processor.ProcessAsync(webSocket, clientCertificate);
+            });
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapWhen(
-                    context => !context.Request.Path.StartsWithSegments("/api"),
+                    context => !context.Request.Path.StartsWithSegments("/api")
+                            && !context.Request.Path.StartsWithSegments("/ws"),
                     app => app.UseSpa(spa => spa.UseProxyToSpaDevelopmentServer(cmdMain.SpaDevServerUrl))
                 );
             }
@@ -243,6 +265,8 @@ namespace WaterPurifierTimeAlert.Server
             {
                 app.MapFallbackToFile("index.html");
             }
+
+            _ = app.Services.GetRequiredService<AlertTask>();
 
             await app.RunAsync();
         }
