@@ -1,0 +1,10 @@
+---
+ContentRootPath: 
+# WebRootPath: "ClientApp"
+# WebHttpPort: 80
+# WebHttpsPort: 443
+# ServerCertificate: ""
+# ServerCertificatePassword: ""
+# CertificateChain: ","
+# IncludeCipherSuites: ","
+DbPath: 

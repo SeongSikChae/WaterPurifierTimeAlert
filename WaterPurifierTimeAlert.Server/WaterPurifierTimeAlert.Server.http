@@ -1,0 +1,50 @@
+@WaterPurifierTimeAlert.Server_HostAddress = https://localhost:50443
+
+# FilterTypeController — Route: [controller] → /FilterType
+
+# GetFilterTypes ([HttpPost])
+POST {{WaterPurifierTimeAlert.Server_HostAddress}}/FilterType
+Content-Type: application/json
+
+{
+  "query": null,
+  "pagination": {
+    "currentPage": 1,
+    "itemSize": 20
+  }
+}
+
+###
+
+# CreateFilterType ([HttpPut])
+PUT {{WaterPurifierTimeAlert.Server_HostAddress}}/FilterType
+Content-Type: application/json
+
+{
+  "name": "예시필터",
+  "expireTime": "12M"
+}
+
+###
+
+# UpdateFilterType ([HttpPut])
+PUT {{WaterPurifierTimeAlert.Server_HostAddress}}/FilterType
+Content-Type: application/json
+
+{
+  "name": "예시필터",
+  "expireTime": "6M"
+}
+
+###
+
+# DeleteFilterType ([HttpPut])
+PUT {{WaterPurifierTimeAlert.Server_HostAddress}}/FilterType
+Content-Type: application/json
+
+{
+  "name": "예시필터",
+  "expireTime": "6M"
+}
+
+###
