@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Serilog.Configuration;
+using System.Configuration;
 using System.Net.Security;
 using System.RelativeTime;
 using System.RelativeTime.Parser;
@@ -41,6 +42,7 @@ namespace WaterPurifierTimeAlert.Server
                     FileInfo configFileInfo = new FileInfo(cmdMain.ConfigFilePath);
                     string str = File.ReadAllText(configFileInfo.FullName);
                     Configuration? configuration = deserializer.Deserialize<Configuration>(str);
+                    ConfigurationValidator.Validate(configuration);
                     WebApplication app = CreateWebApplication(args, cmdMain, configuration);
                     await StartAsync(app, cmdMain, configuration);
                 });
@@ -111,7 +113,7 @@ namespace WaterPurifierTimeAlert.Server
                                 httpsOptions.ServerCertificateChain = new X509Certificate2Collection();
 
                                 foreach (string thumbprint in certificateChain)
-                                    httpsOptions.ServerCertificateChain.Add(certificates[thumbprint]);
+                                    httpsOptions.ServerCertificateChain.Add(certificates[thumbprint.ToUpper()]);
                             }
 
                             httpsOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
