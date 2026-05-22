@@ -32,23 +32,19 @@ jobs:
         cache-dependency-path: WaterPurifierTimeAlert.Client/package-lock.json
 
     - name: Restore dependencies
-      run: |
-        dotnet restore ${{ env.DOTNET_PROJECT }} -r win-x64
-        dotnet restore ${{ env.DOTNET_PROJECT }} -r win-x86
-        dotnet restore ${{ env.DOTNET_PROJECT }} -r osx-x64
-        dotnet restore ${{ env.DOTNET_PROJECT }} -r linux-x64
+      run: dotnet restore ${{ env.DOTNET_PROJECT }}
 
     - name: Publish Win-x64
-      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
 
     - name: Publish Win-x86
-      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x86 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x86 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
 
     - name: Publish OSX-x64
-      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
 
     - name: Publish Linux-x64
-      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
 
     - name: Archive Win-x64
       run: |
