@@ -1,0 +1,36 @@
+<Project>
+  <PropertyGroup>
+    <ClientProjectDir>$(MSBuildThisFileDirectory)..\WaterPurifierTimeAlert.Client\</ClientProjectDir>
+    <ClientDistDir>$(ClientProjectDir)dist\</ClientDistDir>
+    <!-- Configuration.WebRootPath 기본값과 동일 -->
+    <SpaPublishDirName>ClientApp</SpaPublishDirName>
+    <NpmCommand>npm</NpmCommand>
+    <NpmCommand Condition="'$(OS)' == 'Windows_NT'">npm.cmd</NpmCommand>
+  </PropertyGroup>
+
+  <!-- dotnet publish 시: npm ci → npm run build → publish → dist → publish 출력 경로 -->
+  <Target Name="BuildClientApp"
+          BeforeTargets="Publish"
+          Condition="'$(SkipSpaPublish)' != 'true'">
+    <Message Importance="high" Text="Building SPA client in $(ClientProjectDir)" />
+    <Exec WorkingDirectory="$(ClientProjectDir)" Command="$(NpmCommand) ci" />
+    <Exec WorkingDirectory="$(ClientProjectDir)" Command="$(NpmCommand) run build" />
+    <Error Condition="!Exists('$(ClientDistDir)')"
+           Text="Client build did not produce '$(ClientDistDir)'. Run 'npm run build' in WaterPurifierTimeAlert.Client." />
+  </Target>
+
+  <Target Name="PublishClientApp"
+          AfterTargets="Publish"
+          Condition="'$(SkipSpaPublish)' != 'true'">
+    <Error Condition="!Exists('$(ClientDistDir)')"
+           Text="Client dist not found at '$(ClientDistDir)'. Build the client before publishing." />
+    <ItemGroup>
+      <_ClientDistFiles Include="$(ClientDistDir)**\*" />
+    </ItemGroup>
+    <MakeDir Directories="$(PublishDir)$(SpaPublishDirName)" />
+    <Copy SourceFiles="@(_ClientDistFiles)"
+          DestinationFiles="@(_ClientDistFiles->'$(PublishDir)$(SpaPublishDirName)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="Copied SPA assets to $(PublishDir)$(SpaPublishDirName)" />
+  </Target>
+</Project>

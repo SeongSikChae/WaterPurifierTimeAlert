@@ -38,4 +38,6 @@
     </None>
   </ItemGroup>
 
+  <Import Project="ClientApp.publish.targets" />
+
 </Project>

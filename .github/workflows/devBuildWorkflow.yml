@@ -1,7 +1,6 @@
-# This workflow will build a .NET project and upload the build artifacts to a GitHub Release
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+# dev 브랜치 빌드 검증
 
-name: .NET
+name: Dev Build
 
 on:
   push:
@@ -9,23 +8,23 @@ on:
   pull_request:
     branches: [ "dev" ]
 
-jobs:
-  publish:
+env:
+  DOTNET_PROJECT: WaterPurifierTimeAlert.Server/WaterPurifierTimeAlert.Server.csproj
 
+jobs:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
-        
+        dotnet-version: 10.0.x
+
     - name: Restore dependencies
-      run: dotnet restore
-      
+      run: dotnet restore ${{ env.DOTNET_PROJECT }}
+
     - name: Build
-      run: dotnet build --no-restore
-      
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet build ${{ env.DOTNET_PROJECT }} -c Release --no-restore

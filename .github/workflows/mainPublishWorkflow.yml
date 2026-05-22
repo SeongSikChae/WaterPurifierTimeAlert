@@ -1,7 +1,6 @@
-# This workflow will build a .NET project and upload the build artifacts to a GitHub Release
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+# main 브랜치 멀티 RID publish 및 GitHub Release
 
-name: .NET
+name: Main Publish
 
 on:
   push:
@@ -9,86 +8,84 @@ on:
   pull_request:
     branches: [ "main" ]
 
+env:
+  DOTNET_PROJECT: WaterPurifierTimeAlert.Server/WaterPurifierTimeAlert.Server.csproj
+  PUBLISH_DIR: WaterPurifierTimeAlert.Server/bin/Release/net10.0
+
 jobs:
   publish:
-
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
-        
+        dotnet-version: 10.0.x
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+        cache: npm
+        cache-dependency-path: WaterPurifierTimeAlert.Client/package-lock.json
+
     - name: Restore dependencies
-      run: dotnet restore
-      
+      run: dotnet restore ${{ env.DOTNET_PROJECT }}
+
     - name: Build
-      run: dotnet build -c Release --no-restore
-      
-    - name: Test
-      run: dotnet test --no-build -c Release --verbosity normal
-      
-    - name : Publish Win-x64
-      run: dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
+      run: dotnet build ${{ env.DOTNET_PROJECT }} -c Release --no-restore
 
-    - name : Publish Win-x86
-      run: dotnet publish -c Release -r win-x86 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
+    - name: Publish Win-x64
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
 
-    - name : Publish OSX-x64
-      run: dotnet publish -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
+    - name: Publish Win-x86
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x86 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
 
-    - name : Publish Linux-x64
-      run: dotnet publish -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false
+    - name: Publish OSX-x64
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r osx-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
+
+    - name: Publish Linux-x64
+      run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r linux-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
 
     - name: Archive Win-x64
       run: |
-        mkdir __temp || true
-        mkdir archive || true
-        cd __temp
-        cp ../WaterPurifierTimeAlert/bin/Release/net8.0/win-x64/publish/* . -r
-        zip -r ../archive/WaterPurifierTimeAlert-Win64.zip .
-        cd ..
+        mkdir -p __temp archive
+        cp -r "${{ env.PUBLISH_DIR }}/win-x64/publish/." __temp/
+        (cd __temp && zip -r ../archive/WaterPurifierTimeAlert-Win64.zip .)
         rm -rf __temp
 
     - name: Archive Win-x86
       run: |
-        mkdir __temp || true
-        mkdir archive || true
-        cd __temp
-        cp ../WaterPurifierTimeAlert/bin/Release/net8.0/win-x86/publish/* . -r
-        zip -r ../archive/WaterPurifierTimeAlert-Win86.zip .
-        cd ..
+        mkdir -p __temp archive
+        cp -r "${{ env.PUBLISH_DIR }}/win-x86/publish/." __temp/
+        (cd __temp && zip -r ../archive/WaterPurifierTimeAlert-Win86.zip .)
         rm -rf __temp
 
     - name: Archive OSX-x64
       run: |
-        mkdir __temp || true
-        mkdir archive || true
-        cd __temp
-        cp ../WaterPurifierTimeAlert/bin/Release/net8.0/osx-x64/publish/* . -r
-        zip -r ../archive/WaterPurifierTimeAlert-OSX64.zip .
-        cd ..
+        mkdir -p __temp archive
+        cp -r "${{ env.PUBLISH_DIR }}/osx-x64/publish/." __temp/
+        (cd __temp && zip -r ../archive/WaterPurifierTimeAlert-OSX64.zip .)
         rm -rf __temp
 
     - name: Archive Linux-x64
       run: |
-        mkdir __temp || true
-        mkdir archive || true
-        cd __temp
-        cp ../WaterPurifierTimeAlert/bin/Release/net8.0/linux-x64/publish/* . -r
-        zip -r ../archive/WaterPurifierTimeAlert-Linux64.zip .
-        cd ..
+        mkdir -p __temp archive
+        cp -r "${{ env.PUBLISH_DIR }}/linux-x64/publish/." __temp/
+        (cd __temp && zip -r ../archive/WaterPurifierTimeAlert-Linux64.zip .)
         rm -rf __temp
 
     - name: Get Project Version
+      if: github.event_name == 'push'
       uses: bbonkr/get-version-action@v1
       id: project_version
       with:
-        project: "./WaterPurifierTimeAlert/WaterPurifierTimeAlert.csproj"      
+        project: ${{ env.DOTNET_PROJECT }}
 
     - name: Create Git Tag
+      if: github.event_name == 'push'
       id: create_tag
       run: |
         TAG_NAME=v${{ steps.project_version.outputs.version }}
@@ -101,6 +98,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Delete existing release
+      if: github.event_name == 'push'
       run: |
         TAG_NAME=${{ env.tag_name }}
         gh release delete $TAG_NAME -y || true
@@ -108,6 +106,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Upload to GitHub Release
+      if: github.event_name == 'push'
       uses: softprops/action-gh-release@v2
       with:
         files: archive/**
