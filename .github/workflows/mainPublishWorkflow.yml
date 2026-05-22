@@ -32,10 +32,11 @@ jobs:
         cache-dependency-path: WaterPurifierTimeAlert.Client/package-lock.json
 
     - name: Restore dependencies
-      run: dotnet restore ${{ env.DOTNET_PROJECT }}
-
-    - name: Build
-      run: dotnet build ${{ env.DOTNET_PROJECT }} -c Release --no-restore
+      run: |
+        dotnet restore ${{ env.DOTNET_PROJECT }} -r win-x64
+        dotnet restore ${{ env.DOTNET_PROJECT }} -r win-x86
+        dotnet restore ${{ env.DOTNET_PROJECT }} -r osx-x64
+        dotnet restore ${{ env.DOTNET_PROJECT }} -r linux-x64
 
     - name: Publish Win-x64
       run: dotnet publish ${{ env.DOTNET_PROJECT }} -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -p:PublishTrimmed=false --no-restore
