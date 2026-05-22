@@ -1,5 +1,4 @@
 ﻿using Quartz;
-using System.Collections.Concurrent;
 using System.RelativeTime;
 using System.RelativeTime.Ast;
 using System.RelativeTime.Parser;
@@ -7,29 +6,30 @@ using System.RelativeTime.Parser;
 namespace WaterPurifierTimeAlert.Server.Services
 {
     using Server.Context.Entity;
-    using Server.Context.Store;    
+    using Server.Context.Store;
 
     public sealed class AlertTask : AsyncTask
     {
         private const string TASK_ID = "AlertTask";
 
-        private readonly NotificationHubs hubs;
+        private readonly WebPushSender pushSender;
         private readonly IFilterTypeStore filterTypeStore;
         private readonly IExchangeFilterStore exchangeFilterStore;
         private readonly IRelativeTimeExpressionParser relativeTimeExpressionParser;
         private readonly IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser;
         private readonly ITaskScheduler taskScheduler;
 
-        public AlertTask(NotificationHubs hubs, IFilterTypeStore filterTypeStore, IExchangeFilterStore exchangeFilterStore, IRelativeTimeExpressionParser relativeTimeExpressionParser, IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser, ITaskScheduler taskScheduler)
+        public AlertTask(WebPushSender pushSender, IFilterTypeStore filterTypeStore, IExchangeFilterStore exchangeFilterStore, IRelativeTimeExpressionParser relativeTimeExpressionParser, IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser, ITaskScheduler taskScheduler)
         {
-            this.hubs = hubs;
+            this.pushSender = pushSender;
             this.filterTypeStore = filterTypeStore;
             this.exchangeFilterStore = exchangeFilterStore;
             this.relativeTimeExpressionParser = relativeTimeExpressionParser;
             this.relativeTimeToDateTimeParser = relativeTimeToDateTimeParser;
             this.taskScheduler = taskScheduler;
 
-            taskScheduler.AddTask(TASK_ID, this, new CronExpression("0 0 9 * * ?"));
+            // taskScheduler.AddTask(TASK_ID, this, new CronExpression("0 0 9 * * ?"));
+            taskScheduler.AddTask(TASK_ID, this, new CronExpression("0 * * * * ?"));
         }
 
         private volatile bool disposed = false;
@@ -54,11 +54,15 @@ namespace WaterPurifierTimeAlert.Server.Services
                 }
             }
 
-            foreach (string hubName in hubs.GetHubNames())
+            foreach (ExchangeFilter filter in list)
             {
-                BlockingCollection<ExchangeFilter> hub = hubs.GetHub(hubName);
-                foreach (ExchangeFilter filter in list)
-                    hub.Add(filter);
+                await pushSender.SendToAllAsync(new
+                {
+                    title = "필터 교체 알림",
+                    body = $"필터: {filter.FilterName}\n다음 교체일: {filter.NextExchnageDate:yyyy-MM-dd}",
+                    tag = filter.FilterName,
+                    filter,
+                }, cancellationToken);
             }
         }
 

@@ -11,7 +11,6 @@ using System.RelativeTime;
 using System.RelativeTime.Parser;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
-using System.Net.WebSockets;
 
 namespace WaterPurifierTimeAlert.Server
 {
@@ -63,7 +62,14 @@ namespace WaterPurifierTimeAlert.Server
 
             builder.Logging.Services.AddSerilog(configureLogger =>
             {
-                configureLogger.Enrich.WithCaller()
+                configureLogger
+                    .MinimumLevel.Information()
+                    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.AspNetCore", Serilog.Events.LogEventLevel.Warning)
+                    .MinimumLevel.Override("Microsoft.Hosting", Serilog.Events.LogEventLevel.Warning)
+                    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+                    .Enrich.WithCaller()
                     .WriteTo.File(
                         new DirectoryInfo(cmdMain.LogDirPath).FullName,
                         "waterPurifierTimeAlert.log",
@@ -161,8 +167,8 @@ namespace WaterPurifierTimeAlert.Server
             builder.Services.AddSingleton(RelativeTimeExpressionToDateTimeParserFactory.Create());
             builder.Services.AddSingleton(configuration);
             builder.Services.AddSingleton<ITaskScheduler, DefaultTaskScheduler>();
-            builder.Services.AddSingleton<WebSocketProcessor>();
-            builder.Services.AddSingleton<NotificationHubs>();
+            builder.Services.AddSingleton<IPushSubscriptionStore, PushSubscriptionStore>();
+            builder.Services.AddSingleton<WebPushSender>();
             builder.Services.AddSingleton<AlertTask>();
             builder.Services.AddControllers();
             //// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -229,35 +235,18 @@ namespace WaterPurifierTimeAlert.Server
             });
             app.UseHsts();
 
-            app.UseWebSockets();
             app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-            app.Map("/ws", async context =>
-            {
-                if (!context.WebSockets.IsWebSocketRequest)
-                {
-                    context.Response.StatusCode = 400;
-                    return;
-                }
-
-                WebSocketProcessor processor = context.RequestServices.GetRequiredService<WebSocketProcessor>();
-
-                using WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-
-                X509Certificate2? clientCertificate = await context.Connection.GetClientCertificateAsync();
-                await processor.ProcessAsync(webSocket, clientCertificate);
-            });
 
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
                 app.MapWhen(
-                    context => !context.Request.Path.StartsWithSegments("/api")
-                            && !context.Request.Path.StartsWithSegments("/ws"),
+                    context => !context.Request.Path.StartsWithSegments("/api"),
                     app => app.UseSpa(spa => spa.UseProxyToSpaDevelopmentServer(cmdMain.SpaDevServerUrl))
                 );
             }
@@ -267,6 +256,16 @@ namespace WaterPurifierTimeAlert.Server
             }
 
             _ = app.Services.GetRequiredService<AlertTask>();
+
+            WebPushSender pushSender = app.Services.GetRequiredService<WebPushSender>();
+            if (!pushSender.IsConfigured)
+            {
+                (string publicKey, string privateKey) = WebPushSender.GenerateVapidKeys();
+                ILogger<Program> logger = app.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning(
+                    "VAPID 키가 설정되지 않았습니다. 다음 값을 config.yml 의 VapidPublicKey / VapidPrivateKey / VapidSubject 에 추가하세요.\nVapidPublicKey: {PublicKey}\nVapidPrivateKey: {PrivateKey}\nVapidSubject: mailto:admin@example.com",
+                    publicKey, privateKey);
+            }
 
             await app.RunAsync();
         }

@@ -10,8 +10,17 @@ namespace WaterPurifierTimeAlert.Server.Context
 
         public virtual DbSet<ExchangeFilter> ExchangeFilter { get; set; }
 
+        public virtual DbSet<PushSubscription> PushSubscription { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<PushSubscription>().HasKey(entity => entity.Endpoint);
+            modelBuilder.Entity<PushSubscription>().Property(property => property.Endpoint).HasMaxLength(500).IsRequired();
+            modelBuilder.Entity<PushSubscription>().Property(property => property.P256dh).HasMaxLength(200).IsRequired();
+            modelBuilder.Entity<PushSubscription>().Property(property => property.Auth).HasMaxLength(100).IsRequired();
+            modelBuilder.Entity<PushSubscription>().Property(property => property.UserEmail).HasMaxLength(256).IsRequired();
+            modelBuilder.Entity<PushSubscription>().HasIndex(entity => entity.UserEmail);
+
             modelBuilder.Entity<FilterType>().HasKey(entity => entity.Name);
             modelBuilder.Entity<FilterType>().Property(property => property.Name).HasMaxLength(20);
             modelBuilder.Entity<FilterType>().Property(property => property.ExpireTime).HasMaxLength(10).IsRequired();

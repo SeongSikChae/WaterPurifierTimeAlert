@@ -30,5 +30,14 @@ namespace WaterPurifierTimeAlert.Server
 
         [Property(PropertyType.STRING, required: true)]
         public string DbPath { get; set; } = null!;
+
+        [Property(PropertyType.STRING, required: false)]
+        public string? VapidSubject { get; set; }
+
+        [Property(PropertyType.STRING, required: false)]
+        public string? VapidPublicKey { get; set; }
+
+        [Property(PropertyType.STRING, required: false)]
+        public string? VapidPrivateKey { get; set; }
     }
 }

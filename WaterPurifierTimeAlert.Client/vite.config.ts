@@ -16,13 +16,6 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/ws': {
-        target: 'wss://localhost:50443',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-        rewriteWsOrigin: true,
-      },
     },
   },
 });

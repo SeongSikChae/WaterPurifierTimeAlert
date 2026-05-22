@@ -4,7 +4,7 @@ import { FilterTypeManager } from '@/components/FilterTypeManager';
 import { ExchangeFilterManager } from '@/components/ExchangeFilterManager';
 import { UserBadge } from '@/components/UserBadge';
 import { cn } from '@/lib/utils';
-import { connectWebSocket, requestNotificationPermission } from '@/api/webSocketClient';
+import { subscribePush, unsubscribePush } from '@/api/pushClient';
 import { Bell, BellOff } from 'lucide-react';
 
 type View = 'filterType' | 'exchangeFilter';
@@ -28,23 +28,19 @@ const App: React.FC = () => {
   );
 
   const handleRequestNotification = React.useCallback(async () => {
-    const result = await requestNotificationPermission();
-    setNotifPermission(result);
-    if (result === 'granted') {
+    if (notifPermission === 'granted') {
+      await unsubscribePush();
+      setNotifPermission(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
+      return;
+    }
+    const sub = await subscribePush();
+    setNotifPermission(typeof Notification !== 'undefined' ? Notification.permission : 'denied');
+    if (sub) {
       try {
         new Notification('알림이 활성화되었습니다', { body: '필터 교체 알림을 받게 됩니다.' });
       } catch {}
     }
-  }, []);
-
-  React.useEffect(() => {
-    const client = connectWebSocket({
-      onMessage: (data) => {
-        console.log('교체 필터 알림 수신:', data);
-      },
-    });
-    return () => client.close();
-  }, []);
+  }, [notifPermission]);
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">

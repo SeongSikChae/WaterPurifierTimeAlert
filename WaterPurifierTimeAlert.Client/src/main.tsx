@@ -4,6 +4,9 @@ import { Provider } from 'react-redux';
 import App from './App';
 import { store } from './store';
 import './index.css';
+import { ensureServiceWorker } from './api/pushClient';
+
+void ensureServiceWorker();
 
 const container = document.getElementById('root');
 if (!container) throw new Error('#root element not found');
