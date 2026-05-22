@@ -8,3 +8,7 @@ ContentRootPath:
 # CertificateChain: ","
 # IncludeCipherSuites: ","
 DbPath: 
+# VapidSubject:
+# VapidPublicKey:
+# VapidPrivateKey:
+# AlertScheduleExpression: "0 0 9 * * ?"

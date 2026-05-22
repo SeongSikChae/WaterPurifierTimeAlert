@@ -39,5 +39,8 @@ namespace WaterPurifierTimeAlert.Server
 
         [Property(PropertyType.STRING, required: false)]
         public string? VapidPrivateKey { get; set; }
+
+        [Property(PropertyType.STRING, required: false, DefaultValue = "0 0 9 * * ?")]
+        public string AlertScheduleExpression { get; set; } = null!;
     }
 }

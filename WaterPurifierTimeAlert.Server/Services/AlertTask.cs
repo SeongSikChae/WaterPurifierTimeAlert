@@ -19,7 +19,7 @@ namespace WaterPurifierTimeAlert.Server.Services
         private readonly IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser;
         private readonly ITaskScheduler taskScheduler;
 
-        public AlertTask(WebPushSender pushSender, IFilterTypeStore filterTypeStore, IExchangeFilterStore exchangeFilterStore, IRelativeTimeExpressionParser relativeTimeExpressionParser, IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser, ITaskScheduler taskScheduler)
+        public AlertTask(Configuration configuration, WebPushSender pushSender, IFilterTypeStore filterTypeStore, IExchangeFilterStore exchangeFilterStore, IRelativeTimeExpressionParser relativeTimeExpressionParser, IRelativeTimeToDateTimeParser relativeTimeToDateTimeParser, ITaskScheduler taskScheduler)
         {
             this.pushSender = pushSender;
             this.filterTypeStore = filterTypeStore;
@@ -28,8 +28,7 @@ namespace WaterPurifierTimeAlert.Server.Services
             this.relativeTimeToDateTimeParser = relativeTimeToDateTimeParser;
             this.taskScheduler = taskScheduler;
 
-            // taskScheduler.AddTask(TASK_ID, this, new CronExpression("0 0 9 * * ?"));
-            taskScheduler.AddTask(TASK_ID, this, new CronExpression("0 * * * * ?"));
+            taskScheduler.AddTask(TASK_ID, this, new CronExpression(configuration.AlertScheduleExpression));
         }
 
         private volatile bool disposed = false;
