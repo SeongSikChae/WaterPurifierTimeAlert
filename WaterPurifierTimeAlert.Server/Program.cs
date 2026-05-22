@@ -105,15 +105,21 @@ namespace WaterPurifierTimeAlert.Server
 
                                 Dictionary<string, X509Certificate2> certificates = new Dictionary<string, X509Certificate2>();
                                 foreach (X509Certificate2 certificate in collection.Where(cert => !cert.HasPrivateKey))
-                                    certificates.Add(certificate.Thumbprint, certificate);
+                                {
+                                    string name = certificate.GetNameInfo(X509NameType.SimpleName, false);
+                                    certificates.Add(name, certificate);
+                                }
 
                                 string[] certificateChain =
                                     configuration.CertificateChain.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
                                 httpsOptions.ServerCertificateChain = new X509Certificate2Collection();
 
-                                foreach (string thumbprint in certificateChain)
-                                    httpsOptions.ServerCertificateChain.Add(certificates[thumbprint.ToUpper()]);
+                                foreach (string name in certificateChain)
+                                {
+                                    if (certificates.TryGetValue(name, out X509Certificate2? certificate))
+                                        httpsOptions.ServerCertificateChain.Add(certificate);                                    
+                                }
                             }
 
                             httpsOptions.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
