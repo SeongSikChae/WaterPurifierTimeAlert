@@ -1,13 +1,13 @@
 ---
-ContentRootPath: 
-# WebRootPath: "ClientApp"
+ContentRootPath: # Absolute Path
+# WebRootPath: "ClientApp" # Relative Path ${ContentRootPath}/${WebRootPath}
 # WebHttpPort: 80
 # WebHttpsPort: 443
-# ServerCertificate: ""
+# ServerCertificate: "" # Absolute Path
 # ServerCertificatePassword: ""
 # CertificateChain: ","
 # IncludeCipherSuites: ","
-DbPath: 
+DbPath: # Absolute Path ex) purifer.db
 # VapidSubject:
 # VapidPublicKey:
 # VapidPrivateKey:
